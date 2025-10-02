@@ -21,24 +21,16 @@ int main(void) {
     return 0;
 }
 int task(FILE *in, int *res) {
-    int cur, prev, count = 0;
-    *res = 0;
+    int cur, prev_sum = 0, count = 0;
     if (in == NULL) {
         return 0;
     }
     while (fscanf(in, "%d", &cur) == 1) {
-        printf("%d %d %d\n", prev, cur, *res);
         if (count == 0) {
-            prev = cur;
-        } else if (count == 1) {
-            *res = prev + cur;
-            prev = cur;
-        } else {
-            if (cur + prev < *res) {
-                *res = cur + prev;
-            }
-            prev = cur;
-        }
+            *res = cur;
+        } 
+        prev_sum = (cur < prev_sum + cur) ? cur : prev_sum + cur;
+        *res = (prev_sum < *res) ? prev_sum : *res;
         count++;
     }
     if (!feof(in)) return 2;
