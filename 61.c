@@ -31,6 +31,7 @@ int task(FILE *in, int *res) {
     
     if (fscanf(in, "%d", &cur) == 1) {
         do {
+            
             switch(n) {
                 case 0: 
                     if (cur == -1) n = 1; 
@@ -59,9 +60,11 @@ int task(FILE *in, int *res) {
                         n = 0; 
                     } 
                     else if (cur == -1) n = 1; 
+                    else if (cur == 0) n = 3;
                     else n = 0;
                     break;
             }
+            printf("%d %d\n", cur, n);
         } while (fscanf(in, "%d", &cur) == 1);
     } else {
         if (feof(in)) return 1;
