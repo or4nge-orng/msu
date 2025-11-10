@@ -34,9 +34,6 @@ int read(FILE *in, int **mass, size_t *n) {
     }
 
     if (!feof(in)) {
-        // Возможно, есть лишние данные? Но по условию файл должен содержать только m и m чисел.
-        // В данном случае, если после m чисел есть еще данные, это ошибка?
-        // По условию задачи в одном из вариантов количество чисел задается отдельным числом, так что, возможно, лишние данные не допускаются.
         free(*mass);
         *mass = NULL;
         return -3;
@@ -82,7 +79,7 @@ int find_k_max(int mass[], size_t n, int k, int *res){
         return 1;
     }
     for (int i = 1; i < k; i++) {
-        int candidate = INT32_MIN, found = 0;
+        int candidate = 0x80000000, found = 0;
         for (size_t j = 0; j < n; j++) {
             if (mass[j] > candidate && mass[j] < cur_max) {
                 candidate = mass[j];
