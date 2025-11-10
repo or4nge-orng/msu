@@ -83,7 +83,7 @@ int find_k_max(int mass[], size_t n, int k, int *res){
         return 1;
     }
     for (int i = 1; i < k; i++) {
-        int candidate = INT32_MIN, found = 0;
+        int candidate = 0x80000000, found = 0;
         for (size_t j = 0; j < n; j++) {
             if (mass[j] > candidate && mass[j] < cur_max) {
                 candidate = mass[j];
