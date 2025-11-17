@@ -8,7 +8,7 @@ int find_k_max(int [], size_t, int, int *);
 void task(int [], size_t);
 int read(FILE *in, int **mass, size_t *n) {
     size_t m;
-    *n = 0;
+    int cur;
     *mass = NULL;
     if (in == NULL)
         return 0;
@@ -19,7 +19,7 @@ int read(FILE *in, int **mass, size_t *n) {
     if (m <= 0) {
         return -2;
     }
-
+    *n = m;
     *mass = malloc(m * sizeof(int));
     if (*mass == NULL) {
         return -3;
@@ -32,14 +32,21 @@ int read(FILE *in, int **mass, size_t *n) {
             return -1;
         }
     }
-
+    while (!feof(in)) {
+        if (fscanf(in, "%d", &cur) != 1) {
+            break;
+        } else {
+            m++;
+        }
+    }
     if (!feof(in)) {
         free(*mass);
         *mass = NULL;
+        return -1;
+    }
+    if (m != *n) {
         return -3;
     }
-
-    *n = m;
     return 1;
 }
 void pr (int mass[], size_t n){
