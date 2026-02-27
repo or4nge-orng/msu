@@ -9,7 +9,7 @@ int main(void) {
     FILE *in = fopen("1.txt", "r");
     char found;
     size_t n;
-    int *res = (int*)malloc(N * sizeof(int)), err = task(in, &res, &n, &found, N);
+    int *res = NULL, err = task(in, &res, &n, &found, N);
     if (err) fclose(in);
     switch(err){
         case 0:	printf("No file\n");break;
@@ -20,14 +20,13 @@ int main(void) {
             puts("Answer");
             if (found) {
                 if (n > N) {
-                    puts("n>N");
                     for (size_t i = 0; i < (size_t)N; i++) {
-                        printf("%d ", res[i%N]);
+                        // printf("%zu: ", (n+i)%N);
+                        printf("%d ", res[(n+i)%N]);
                     }
                     printf("\n");
                 } else {
-                    puts("n<=N");
-                    for (size_t i; i < n; i++) {
+                    for (size_t i = 0; i < n; i++) {
                         printf("%d ", res[i]);
                     }
                     printf("\n");

@@ -11,10 +11,11 @@ int task (FILE *in, int **res, size_t *L, char *found, int N) {
     int value;
     size_t i = 0;
     (*L) = 0;
-    (*res) = (int*)calloc(N, sizeof(int));
+    
     if(in==NULL)
 		return 0;
-    
+    (*res) = (int*)malloc(N*sizeof(int));
+
     while (fscanf(in, "%d", &value) == 1) {
         i = *L % N;
         
