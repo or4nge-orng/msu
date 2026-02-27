@@ -38,13 +38,38 @@ int read(FILE* file, int*** matrix, int* rows, int* cols) {
             (*matrix)[j][i] = value;
         }
     }
+    int extra;
+    if (fscanf(file, "%d", &extra) == 1) {
+            fprintf(stderr, "Extra element: %d\n", extra);
+            free(*matrix);
+            return 1;
+        }
+    if (!feof(file)) {
+        perror("File reading error");
+        free(*matrix);
+        return 1;
+    }
+
     return 0;
 }
 
 void pr(int** matrix, int rows, int cols) {
+    if (matrix == NULL) {
+        printf("Matrix is NULL\n\n");
+        return;
+    }
+    if (rows <= 0 || cols <= 0) {
+        printf("Empty matrix\n\n");
+        return;
+    }
+
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
-            printf("%d ", matrix[j][i]); 
+            if (matrix[j] == NULL) {
+                printf("NULL ");
+            } else {
+                printf("%d ", matrix[j][i]);
+            }
         }
         printf("\n");
     }
@@ -65,15 +90,34 @@ int isComparable(const int* col1, const int* col2, int rows) {
 }
 
 void task(int** matrix, int rows, int* cols) {
-    for (int i = 0; i < *cols; ++i) {
-        for (int j = i + 1; j < *cols; ++j) {
+    int newCols = 0, n = *cols;
+    if (matrix == NULL) {
+        printf("matrix is NULL\n");
+        return;
+    }
+    if (cols == NULL) {
+        printf("cols is NULL!\n");
+        return;
+    }
+    if (rows <= 0) {
+        printf("rows <= 0\n");
+        return;
+    }
+
+    
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; j++) {
+            if (matrix[j] == NULL || matrix[i] == NULL) continue;
             if (isComparable(matrix[i], matrix[j], rows)) {
-                for (int k = j; k < *cols - 1; ++k) {
-                    matrix[k] = matrix[k + 1];
-                }
-                (*cols)--;
-                j--;
+                matrix[i] = NULL;
+                matrix[j] = NULL;
             }
         }
     }
+    for (int i = 0; i < n; i++) {
+        if (matrix[i] != NULL) {
+            matrix[newCols++] = matrix[i];
+        }
+    }
+    *cols = newCols;
 }
