@@ -12,21 +12,40 @@ int main(void) {
     int **matrix = NULL;
     int rows = 0, cols = 0;
 ;
-    if (read(file, &matrix, &rows, &cols) != 0) {
-        printf("Read failed\n");
-        fclose(file);
-        return 1;
+    switch (read(file, &matrix, &rows, &cols))
+    {
+    case 1:
+        perror("File error");
+        break;
+    case 2:
+        perror("Size reading error");
+        break;
+    case 3:
+        fprintf(stderr, "Invalid matrix size: %d x %d\n", rows, cols);
+        break;
+    case 4:
+        perror("Memory allocation error");
+        break;
+    case 5:
+        perror("Element reading error");
+        break;
+    case 6:
+        perror("Extra element");
+        break;
+    case 7:
+        perror("File reading error");
+        break;
+    default:
+        task(matrix, rows, &cols);
+        break;
     }
+        
 
     if (matrix == NULL) {
         printf("Matrix is NULL\n");
         fclose(file);
         return 1;
     }
-
-    pr(matrix, rows, cols);
-
-    task(matrix, rows, &cols);
 
     pr(matrix, rows, cols);
 
