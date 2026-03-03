@@ -4,6 +4,7 @@
 #include <string.h>
 
 int read(FILE* file, int*** matrix, int* rows, int* cols) {
+    int value, n = 0;
     if (file == NULL) {
         return 1;
     }
@@ -25,24 +26,27 @@ int read(FILE* file, int*** matrix, int* rows, int* cols) {
     }
     for (int i = 0; i < *rows; ++i) {
         for (int j = 0; j < *cols; ++j) {
-            int value;
+            
             if (fscanf(file, "%d", &value) != 1) {
                 free(*matrix);
+                matrix = NULL;
                 return 5;
             }
             (*matrix)[j][i] = value;
+            n++;
         }
     }
-    int extra;
-    if (fscanf(file, "%d", &extra) == 1) {
-            free(*matrix);
-            return 6;
-        }
+    while(fscanf(file, "%d", &value) == 1) n++;
     if (!feof(file)) {
         free(*matrix);
+        matrix = NULL;
         return 7;
     }
-
+    if (n > (*rows * *cols)) {
+        free(*matrix);
+        matrix = NULL;
+        return 6;
+    }
     return 0;
 }
 

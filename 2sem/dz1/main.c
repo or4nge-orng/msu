@@ -16,25 +16,25 @@ int main(void) {
     {
     case 1:
         perror("File error");
-        break;
+        return 0;
     case 2:
         perror("Size reading error");
-        break;
+        return 0;
     case 3:
         fprintf(stderr, "Invalid matrix size: %d x %d\n", rows, cols);
-        break;
+        return 0;
     case 4:
         perror("Memory allocation error");
-        break;
+        return 0;
     case 5:
         perror("Element reading error");
-        break;
+        return 0;
     case 6:
         perror("Extra element");
-        break;
+        return 0;
     case 7:
         perror("File reading error");
-        break;
+        return 0;
     default:
         task(matrix, rows, &cols);
         break;
