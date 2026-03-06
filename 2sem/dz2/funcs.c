@@ -5,6 +5,8 @@
 
 int read(FILE* file, int*** matrix, int* rows, int* cols, int* N) {
     int value, n = 0;
+    int* data;
+    size_t ptr_size, data_size, extra;
     if (file == NULL) {
         return 1;
     }
@@ -14,13 +16,14 @@ int read(FILE* file, int*** matrix, int* rows, int* cols, int* N) {
     if (*rows <= 0 || *cols <= 0) {
         return 3;
     }
-    size_t ptr_size = (size_t)(*cols) * sizeof(int*);
-    size_t data_size = (size_t)(*rows) * (*cols) * sizeof(int);
-    *matrix = (int**)malloc(ptr_size + data_size);
+    ptr_size = (size_t)(*cols) * sizeof(int*);
+    data_size = (size_t)(*rows) * (*cols) * sizeof(int);
+    extra = (size_t)(*cols) * sizeof(int);
+    *matrix = (int**)malloc(ptr_size + data_size + extra);
     if (*matrix == NULL) {
         return 4;
     }
-    int* data = (int*)((char*)(*matrix) + ptr_size);
+    data = (int*)((char*)(*matrix) + ptr_size);
     for (int i = 0; i < *cols; ++i) {
         (*matrix)[i] = data + i * (*rows);
     }
@@ -78,9 +81,13 @@ int getColSum(const int* col, int rows) {
 }
 
 void task(int** matrix, int rows, int* cols, int N) {
-    int ind[*cols], n_ind = 0, max_sum = getColSum(matrix[0], rows), sum = 0,
+    int n_ind = 0, max_sum = getColSum(matrix[0], rows), sum = 0,
     left, right, r, l;
-    
+    size_t ptr_size = (size_t)(*cols) * sizeof(int*),
+    data_size = (size_t)(rows) * (*cols) * sizeof(int);
+
+    int* ind = (int*)((char*)matrix + ptr_size + data_size);
+
     for (int i = 0; i < *cols; i++) {
         sum = getColSum(matrix[i], rows);
         if(sum > max_sum){
