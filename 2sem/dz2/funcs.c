@@ -27,13 +27,29 @@ int read(FILE* file, int*** matrix, int* rows, int* cols, int* N) {
     for (int i = 0; i < *cols; ++i) {
         (*matrix)[i] = data + i * (*rows);
     }
+
+    if (feof(file)) {
+        free(*matrix);
+        matrix = NULL;
+        return 8;
+    }
     for (int i = 0; i < *rows; ++i) {
         for (int j = 0; j < *cols; ++j) {
-            
             if (fscanf(file, "%d", &value) != 1) {
-                free(*matrix);
-                matrix = NULL;
-                return 5;
+                if (feof(file)) {
+                    free(*matrix);
+                    *matrix = NULL;
+                    return 8;
+                } else if (ferror(file)) {
+                    free(*matrix);
+                    *matrix = NULL;
+                    return 5;
+                } else {
+                    clearerr(file);
+                    free(*matrix);
+                    *matrix = NULL;
+                    return 5;
+                }
             }
             (*matrix)[j][i] = value;
             n++;

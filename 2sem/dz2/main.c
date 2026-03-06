@@ -35,6 +35,9 @@ int main(void) {
     case 7:
         perror("File reading error");
         return 0;
+    case 8:
+        perror("Not enough elements");
+        return 0;
     default:
         task(matrix, rows, &cols, N);
         break;
