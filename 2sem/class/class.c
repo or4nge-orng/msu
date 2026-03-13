@@ -8,7 +8,9 @@ int main(void) {
     FILE *file = fopen("1.txt", "r");
     char fuf[512];
 
-    while (fscanf(file, "%s", fuf))
+    while (fgets(fuf, 512, file) != NULL) {
+        puts(fuf);
+    }
 
     return 0;
 }

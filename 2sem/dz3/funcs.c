@@ -21,10 +21,10 @@ int search(const char *SInputFile, char *word) {
             if (only_letters && has_upper) {
                 ++c;
                 len = strlen(words);
-                if (len < best_len) {
+                if (len <= best_len) {
                     best_len = len;
                     strcpy(best_word, words);
-                } else if (len == best_len) strcpy(best_word, words);
+                }
             }
             words = strtok(NULL, " \t");
         }
