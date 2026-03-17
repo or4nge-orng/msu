@@ -9,7 +9,7 @@ int search(const char *SInputFile, char *word) {
     int c = 0, best_len = N+1, only_letters, has_upper, len;
     if (!file) return -1;
     while(fgets(line, sizeof(line), file) != NULL) {
-        line[strcspn(line, "\n")] = 0;
+        pr(line);
         words = strtok(line, " \t");
         while (words) {
             only_letters = 1;
@@ -39,6 +39,7 @@ int search(const char *SInputFile, char *word) {
 }
 
 void pr(char *word) {
+    printf("word: ");
     for (char *i = word; *i; i++) {
         putchar(*i);
     }
