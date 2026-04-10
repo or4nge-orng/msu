@@ -1,21 +1,17 @@
-#include "funcs.h" 
+#include "funcs.h"
 #include <string.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
 
 int main(void) {
-    // Указатели на матрицу и размеры строк
     int** matrix = NULL;
     int* row_sizes = NULL;
-    int rows = 0; // Количество строк
-
-    // Имя входного файла
+    int rows = 0;
     char* filename = "1.txt";
+    int read_res;
 
-    // Чтение матрицы из файла
-    int read_res = read_array(filename, &matrix, &rows, &row_sizes);
+    read_res = read_array(filename, &matrix, &rows, &row_sizes);
 
-    // Обработка ошибок чтения
     switch (read_res) {
         case 0:
             break;
@@ -40,8 +36,7 @@ int main(void) {
     task(&matrix, &rows, &row_sizes);
     print_matrix(matrix, row_sizes, rows);
 
-
-    free(matrix); 
+    free(matrix);
     free(row_sizes);
 
     return EXIT_SUCCESS;
