@@ -35,48 +35,55 @@ int comp_cols(int** matrix, int* row_sizes, int rows, int j1, int j2) {
 
 void delete_column(int** mat, int* row_sizes, int rows, int col) {
     int i, j;
+    // Проверка на NULL указатели и корректность индекса столбца
+    if (!mat || !row_sizes || col < 0) return;
+    
     for (i = 0; i < rows; ++i) {
-        if (col < row_sizes[i]) {
+        // Проверка, что строка существует и индекс столбца в её пределах
+        if (mat[i] && col < row_sizes[i]) {
+            // Сдвигаем элементы влево, перезаписывая удаляемый столбец
             for (j = col; j < row_sizes[i] - 1; ++j) {
                 mat[i][j] = mat[i][j + 1];
             }
+            // Уменьшаем размер строки на один элемент
             row_sizes[i]--;
         }
     }
 }
 
 void task(int*** matrix, int* rows, int** row_sizes) {
+    if (*rows == 0) return;
+
     int r = *rows;
     int* sizes = *row_sizes;
     int** mat = *matrix;
     int cols = 0;
-    int i, j, k;
 
-    if (r == 0) return;
-
-    for (i = 0; i < r; ++i)
+    for (int i = 0; i < r; ++i)
         if (sizes[i] > cols) cols = sizes[i];
     if (cols == 0) return;
 
-    j = 0;
+    int j = 0;
     while (j < cols) {
-        int found = 0;
-        for (k = j + 1; k < cols; ++k) {
+        int incomparable = 0;
+        for (int k = 0; k < cols; ++k) {
+            if (j == k) continue;
             if (comp_cols(mat, sizes, r, j, k)) {
-                delete_column(mat, sizes, r, j);
-                if (k > j) {
-                    delete_column(mat, sizes, r, k - 1);
-                } else {
-                    delete_column(mat, sizes, r, k);
-                }
-                cols = 0;
-                for (i = 0; i < r; ++i)
-                    if (sizes[i] > cols) cols = sizes[i];
-                found = 1;
+                incomparable = 1;
                 break;
             }
         }
-        if (!found) {
+        printf("%d\n",incomparable);
+
+        if (incomparable) {
+            delete_column(mat, sizes, r, j);
+            // Пересчитываем max cols
+            cols = 0;
+            for (int i = 0; i < r; ++i)
+                if (sizes[i] > cols) cols = sizes[i];
+            // Начинаем сначала
+            j = 0;
+        } else {
             j++;
         }
     }
