@@ -14,6 +14,11 @@ def task(str='1.txt'):
     >>> task()
     1
     >>> f = open('1.txt', 'w')
+    >>> b = f.write('1 0 1 0 1 0 1 0 0 penis penis penis penis')
+    >>> f.close()
+    >>> task()
+    1
+    >>> f = open('1.txt', 'w')
     >>> b = f.write('1 2 3 2 1 0 1 0 1 0 2')
     >>> f.close()
     >>> task()
