@@ -73,6 +73,7 @@ def task(filename='1.txt'):
             count = 0
 
             while True:
+                enumerate
                 char = f.read(1)
                 if not char:  # EOF
                     if buffer == "":
