@@ -14,16 +14,15 @@ class Student {
     Student(const std::string &name, int group, int isElder);
 
     friend std::ostream &operator<<(std::ostream &, const Student &);
-    friend std::ifstream &operator>>(std::ifstream &, Student &);
-    friend size_t findNewElders(Student**, size_t, Student**, size_t, Student**);
-    friend void sort(Student**, size_t);
+    friend int findNewElders(Student**, int, Student**, int, Student**);
+    friend void sort(Student**, int);
 };
 
-size_t loadStudentsFromFile(const std::string& filename, Student*** students);
-size_t findNewElders(Student** year1, size_t n1, Student** year2, size_t n2, Student** newElders);
-void sort(Student** students, size_t n);
-void free(Student** a, size_t n);
-void print(Student** a, size_t n);
-void writeStudentsToFile(const char* filename, Student** students, size_t n);
+int loadStudentsFromFile(const std::string& filename, Student*** students);
+int findNewElders(Student** year1, int n1, Student** year2, int n2, Student** newElders);
+void sort(Student** students, int n);
+void free(Student** a, int n);
+void print(Student** a, int n);
+void writeStudentsToFile(const char* filename, Student** students, int n);
 
 #endif // STUDENT_H

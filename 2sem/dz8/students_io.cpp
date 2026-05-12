@@ -15,17 +15,10 @@ std::ostream &operator<<(std::ostream &out, const Student &s) {
     return out;
 }
 
-std::ifstream &operator>>(std::ifstream &f,Student &l){ //перегрузка оператора извлечь из потока (>>) студента
-    std::string s;int g, e;
-    f>>s>>g>>e;
-    if(f)l=Student(s,g,e);
-    return f; 
-}
-
-void writeStudentsToFile(const char* filename, Student** students, size_t n){
+void writeStudentsToFile(const char* filename, Student** students, int n){
     std::ofstream out("new_elders.txt");
     if (out) {
-        for (size_t i = 0; i < n; ++i) {
+        for (int i = 0; i < n; ++i) {
             out << *students[i] << "\n";
         }
         out.close();
