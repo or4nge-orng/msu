@@ -16,13 +16,13 @@ std::ostream &operator<<(std::ostream &out, const Student &s) {
 }
 
 void writeStudentsToFile(const char* filename, Student** students, int n){
-    std::ofstream out("new_elders.txt");
+    std::ofstream out(filename);
     if (out) {
         for (int i = 0; i < n; ++i) {
             out << *students[i] << "\n";
         }
         out.close();
-        std::cout << "Результат записан в new_elders.txt\n";
+        std::cout << "Результат записан в " << filename << std::endl;
     } else {
         std::cerr << "Ошибка: не удалось открыть файл для записи\n";
     }

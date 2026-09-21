@@ -29,16 +29,16 @@ int loadStudentsFromFile(const std::string& filename, Student*** students) {
 
         if (!(iss >> s.name)) {
             std::cerr << filename << " error: name error\n";
-            return -1;
+            goto clean_and_exit;
         }
 
         if (!(iss >> s.group) || (s.group < 100 || s.group > 999)) {
             std::cerr << filename << " error: group type error\n";
-            return -2;
+            goto clean_and_exit;
         }
         if (!(iss >> s.isElder) || (s.isElder != 0 && s.isElder != 1)) {
             std::cerr << filename << " error: isElder error\n";
-            return -3;
+            goto clean_and_exit;
         }
 
         if (count >= capacity) {
@@ -56,4 +56,12 @@ int loadStudentsFromFile(const std::string& filename, Student*** students) {
 
     in.close();
     return count;
+
+clean_and_exit:
+    for (int i = 0; i < count; ++i) {
+        delete (*students)[i];
+    }
+    delete[] *students;
+    *students = nullptr;
+    return -1;
 }
