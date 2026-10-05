@@ -4,11 +4,12 @@
 #include <iostream>
 #include <vector>
 
-#define N 5 // Максимальная степень полинома согласно условию задачи
+#define P_MOD 5 // Максимальная степень полинома согласно условию задачи
 
 class CPoly {
 private:
-    int coeffs[N+1];
+    int* coeffs;
+    int cap;
     int p;
     int degree;
 
@@ -19,33 +20,34 @@ private:
     void integral();
 
 public:
+    
+	CPoly();
+    CPoly(const int* init_coeffs, int size, int module = P_MOD);
+    CPoly(const CPoly& other);
+    CPoly(CPoly&& other) noexcept;
+    ~CPoly();
 
-    class CoeffRef {
-        CPoly& poly;
-        int idx;
-    public:
-        CoeffRef(CPoly& pl, int i) : poly(pl), idx(i) {}
-
-        CoeffRef& operator=(int val) {
-            poly.coeffs[idx] = poly.mod(val);
-            if (poly.coeffs[idx] != 0 && idx > poly.degree) {
-                poly.degree = idx;
-            } else if (poly.coeffs[idx] == 0 && idx == poly.degree) {
-                poly.trim();
-            }
-            return *this;
-        }
-
-        operator int() const { return poly.coeffs[idx]; }
-    };
-    CPoly(int prime);
-    CPoly(int prime, const int* initial_coeffs, int size);
+    CPoly& operator=(const CPoly& other);
+    CPoly& operator=(CPoly&& other) noexcept;
 
     int operator[](int index) const;
-    CoeffRef operator[] (int index);
+    int& operator[](int index);
 
-    CPoly operator+(int x) const;
-    friend CPoly operator+(int x, const CPoly& poly);
+    CPoly operator+() &&;
+    CPoly operator+() const &;
+
+    CPoly operator-() &&;
+    CPoly operator-() const &;
+
+    CPoly& operator++();
+    CPoly operator++(int);
+
+    CPoly& operator--();
+    CPoly operator--(int);
+
+    CPoly operator+(const CPoly& other) const;
+    CPoly operator-(const CPoly& other) const;
+
 
     friend std::ostream& operator<<(std::ostream& os, const CPoly& poly);
 };
