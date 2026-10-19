@@ -1,11 +1,64 @@
 #include "CPoly.h"
 
+CPoly::Coeff::Coeff(std::shared_ptr<State> s, int idx)
+    : state(std::move(s)), index(idx) {}
+
+CPoly::Coeff& CPoly::Coeff::operator=(int val) {
+    if (index < 0 || index >= state->cap) {
+        throw std::out_of_range("Индекс вне диапазона [0, cap)");
+    }
+
+    int p = state->p;
+    int normalized = val % p;
+    if (normalized < 0) normalized += p;
+    state->coeffs[index] = normalized;
+
+    if (index > state->degree && normalized != 0) {
+        state->degree = index;
+    } else if (index == state->degree && normalized == 0) {
+        while (state->degree > 0 && state->coeffs[state->degree] == 0) {
+            state->degree--;
+        }
+    }
+    return *this;
+}
+
+CPoly::Coeff& CPoly::Coeff::operator=(const Coeff& other) {
+    if (this != &other) {
+        if (state != other.state) {
+            throw std::invalid_argument("Cannot assign Coeff from a different polynomial");
+        }
+        *this = static_cast<int>(other);
+    }
+    return *this;
+}
+
+CPoly::Coeff::operator int() const {
+    if (index < 0 || index >= state->cap) {
+        throw std::out_of_range("Индекс вне диапазона [0, cap)");
+    }
+    return state->coeffs[index];
+}
 // MARK: methods
 
+bool CPoly::is_prime(int n) {
+    if (n < 2) return false;
+    for (int i = 2; i * i <= n; ++i) {
+        if (n % i == 0) return false;
+    }
+    return true;
+}
+
+void CPoly::check_same_module(const CPoly& other) const {
+    if (state->p != other.state->p) {
+        throw std::invalid_argument("Операции возможны только для полиномов с одинаковым модулем");
+    }
+}
+
 int CPoly::mod(int a) const {
-    int res = a % p;
-    if (res < 0) res += p;
-    return res;
+    int res = a % state->p;
+    if (res < 0) res += state->p;
+    return static_cast<int>(res);
 }
 
 int CPoly::mod_inverse(int a) const {
@@ -13,7 +66,7 @@ int CPoly::mod_inverse(int a) const {
     if (a == 0) {
         throw std::domain_error("Деление на ноль в поле Z_p");
     }
-    int m = p;
+    int m = state->p;
     int m0 = m;
     int y = 0, x = 1;
     if (m == 1) return 0;
@@ -31,175 +84,115 @@ int CPoly::mod_inverse(int a) const {
 }
 
 void CPoly::trim() {
-    while (degree > 0 && coeffs[degree] == 0) {
-        --degree;
+    while (state->degree > 0 && state->coeffs[state->degree] == 0) {
+        state->degree--;
     }
 }
 
 void CPoly::derivative() {
-    if (degree < 0) return;
-    if (degree == 0) {
-        coeffs[0] = 0;
+    if (state->degree < 0) return;
+    if (state->degree == 0) {
+        state->coeffs[0] = 0;
         return;
     }
-    for (int i = 1; i <= degree; ++i) {
-        coeffs[i - 1] = mod(coeffs[i] * i);
+    for (int i = 1; i <= state->degree; ++i) {
+        state->coeffs[i - 1] = mod(static_cast<int>(state->coeffs[i]) * i);
     }
-    coeffs[degree] = 0;
-    --degree;
+    state->coeffs[state->degree] = 0;
+    --state->degree;
     trim();
 }
 
 void CPoly::integral() {
-    if (degree < 0 || cap == 0) return;
-
-    if (degree + 1 >= cap) {
-        int new_cap = cap * 2;
-        if (new_cap <= degree + 1) new_cap = degree + 2;
-
-        int* new_coeffs = new int[new_cap];
-        for(int i = 0; i < new_cap; ++i) new_coeffs[i] = 0;
-
-        for(int i = 0; i <= degree; ++i) new_coeffs[i] = coeffs[i];
-
-        delete[] coeffs;
-        coeffs = new_coeffs;
-        cap = new_cap;
-    }
-
-    for (int i = degree; i >= 0; --i) {
-        if (coeffs[i] == 0) coeffs[i + 1] = 0;                    // затираем «старьё» в этом слоте
-        else {
-            int inv = mod_inverse(i + 1);          // может выбросить исключение
-            coeffs[i + 1] = mod(coeffs[i] * inv);
+    for (int i = 0; i <= state->degree; ++i) {
+        if (state->coeffs[i] != 0 && (i + 1) % state->p == 0) {
+            throw std::domain_error("Обратного элемента не существует, интеграл не может быть вычислен");
         }
     }
-    coeffs[0] = 0;                                // константа интегрирования
-    ++degree;                                     // степень выросла
+
+    if (state->degree + 1 >= state->cap) {
+        int new_cap = std::max(state->cap * 2, state->degree + 2);
+
+        std::unique_ptr<int[]> new_coeffs(new int[new_cap]());
+
+        for(int i = 0; i <= state->degree; ++i) new_coeffs[i] = state->coeffs[i];
+
+        state->coeffs = std::move(new_coeffs);
+        state->cap = new_cap;
+    }
+
+    for (int i = state->degree; i >= 0; --i) {                // затираем «старьё» в этом слоте
+        state->coeffs[i + 1] = (state->coeffs[i] == 0) ? 0 : mod(static_cast<int>(state->coeffs[i]) * mod_inverse(i + 1));
+    }
+    state->coeffs[0] = 0;                                // константа интегрирования
+    ++state->degree;                                     // степень выросла
     trim(); 
 }
 
 // MARK: constuctors and destructor
 
-CPoly::CPoly(): cap(10), p(P_MOD), degree(0) {
-    coeffs = new int[cap];
-    for (int i = 0; i < cap; ++i) coeffs[i] = 0;
-}
+CPoly::CPoly(): state(std::make_shared<State>(10, 0, P_MOD)) {}
 
-CPoly::CPoly(const int* init_coeffs, int size, int module) : p(module) {
-    if (p <= 1) throw std::invalid_argument("Модуль p должен быть > 1");
-    if (size <= 0) throw std::invalid_argument("Размер массива коэффициентов должен быть > 0");
-    if (init_coeffs == nullptr) throw std::invalid_argument("Указатель на массив коэффициентов не должен быть nullptr");
-
-    cap = size;
-    degree = size - 1;
-
-    coeffs = new int[cap];
-
-    for (int i = 0; i < cap; ++i) {
-        coeffs[i] = mod(init_coeffs[i]);
+CPoly::CPoly(const int* init_coeffs, int size, int module) {
+    if (!is_prime(module)) {
+        throw std::invalid_argument("Модуль должен быть простым числом");
     }
-}
+    if (size <= 0) throw std::length_error("Размер массива меньше или равен нулю");
+    if (init_coeffs == nullptr) throw std::invalid_argument("Указатель на массив равен nullptr");
 
-CPoly::CPoly(const CPoly& other) : cap(other.cap), degree(other.degree), p(other.p) {
-    coeffs = new int[cap];
-    for (int i = 0; i < cap; ++i) {
-        coeffs[i] = other.coeffs[i];
-    }
-}
-
-CPoly::CPoly(CPoly&& other) noexcept : coeffs(other.coeffs), cap(other.cap), degree(other.degree), p(other.p) {
-    other.coeffs = nullptr;
-    other.cap = 0;
-    other.degree = -1;
-}
-
-CPoly::~CPoly() {
-    delete[] coeffs;
-}
-
-// MARK: operators =
-
-CPoly& CPoly::operator=(const CPoly& other) {
-    if (this != &other) {
-        if (cap >= other.cap) {
-            degree = other.degree;
-            p = other.p;
-            for (int i = 0; i <= other.degree; ++i) coeffs[i]= other.coeffs[i];
-            for (int i = other.degree + 1; i < cap; ++i) coeffs[i] = 0;
-        } else {
-            delete[] coeffs;
-            cap = other.cap;
-            degree = other.degree;
-            p = other.p;
-            coeffs = new int[cap];
-            for (int i = 0; i < cap; ++i) coeffs[i] = other.coeffs[i];
+    state = std::make_shared<State>(size, 0, module);
+    for (int i = 0; i < size; ++i) {
+        int normalized = mod(init_coeffs[i]);
+        state->coeffs[i] = normalized;
+        if (normalized != 0) {
+            state->degree = i;
         }
     }
-    return *this;
 }
 
-CPoly& CPoly::operator=(CPoly&& other) noexcept {
-    if (this != &other) {
-        if (cap >= other.cap) {
-            degree = other.degree;
-            p = other.p;
-            for (int i = 0; i <= other.degree; ++i) coeffs[i] = other.coeffs[i];
-            for (int i = other.degree; i < cap; ++i) coeffs[i] = 0;
-            delete[] other.coeffs;
-            other.cap = 0;
-            other.degree = -1;
-            other.coeffs = nullptr;
-        } else {
-            delete[] coeffs;
-            coeffs = other.coeffs;
-            cap = other.cap;
-            degree = other.degree;
-            p = other.p;
-
-            other.coeffs = nullptr;
-            other.cap = 0;
-            other.degree = -1;
-        }
-        
+CPoly::CPoly(int cap, int deg, int module) {
+    if (!is_prime(module)) {
+        throw std::invalid_argument("Модуль должен быть простым числом");
     }
-    return *this;
+    if (cap <= 0) throw std::length_error("Размер массива меньше или равен нулю");
+
+    if (deg < 0 || deg >= cap) {
+        throw std::out_of_range("Степень должна быть в диапазоне [0, cap)");
+    }
+    state = std::make_shared<State>(cap, deg, module);
+}
+
+CPoly CPoly::copy() const {
+    CPoly result(state->cap, state->degree, state->p);
+    for (int i = 0; i <= state->degree; ++i) {
+        result.state->coeffs[i] = state->coeffs[i];
+    }
+    return result;
 }
 
 // MARK: operators []
 
-int CPoly::operator[](int d) const {
-    if (d < 0 || d >= cap) throw std::out_of_range("Индекс вне диапазона [0, N]");
-    return coeffs[d];
+CPoly::Coeff CPoly::operator[](int d) const {
+    if (d < 0 || d >= state->cap) throw std::out_of_range("Индекс вне диапазона [0, N]");
+    return Coeff(state, d);
 }
 
-int& CPoly::operator[](int index) {
-    if (index < 0 || index >= cap) throw std::out_of_range("Индекс вне диапазона [0, cap)");
-    return coeffs[index];
+int CPoly::operator[](int index) {
+    if (index < 0 || index >= state->cap) throw std::out_of_range("Индекс вне диапазона [0, cap)");
+    return state->coeffs[index];
 }
 
 // MARK: operators +-
 
-CPoly CPoly::operator+() const & {
-    CPoly res = *this;
-    res.integral();
-    return res;
-}
-
-CPoly CPoly::operator+() && {
-    integral();
+CPoly&& CPoly::operator-() && {
+    derivative();
     return std::move(*this);
 }
 
 CPoly CPoly::operator-() const & {
-    CPoly res = *this;
+    CPoly res = copy();
     res.derivative();
     return res;
-}
-
-CPoly CPoly::operator-() && {
-    derivative();
-    return std::move(*this);
 }
 
 CPoly& CPoly::operator++() {
@@ -208,14 +201,9 @@ CPoly& CPoly::operator++() {
 }
 
 CPoly CPoly::operator++(int) {
-    CPoly tmp = *this;
-    integral();
+    CPoly tmp = copy();
+    ++(*this);
     return tmp;
-}
-
-CPoly CPoly::operator-() && {
-    derivative();
-    return std::move(*this);
 }
 
 CPoly& CPoly::operator--() {
@@ -224,50 +212,39 @@ CPoly& CPoly::operator--() {
 }
 
 CPoly CPoly::operator--(int) {
-    CPoly temp = (*this);
-    derivative();
+    CPoly temp = copy();
+    --(*this);
     return temp;
 }
 
 CPoly CPoly::operator+(const CPoly& other) const {
-    int max_cap = std::max(cap, other.cap);
-    int max_deg = std::max(degree, other.degree);
+    check_same_module(other);
+    int max_cap = std::max(state->cap, other.state->cap);
+    int max_deg = std::max(state->degree, other.state->degree);
 
-    CPoly res;
-    res.p = p;
-    if (res.cap < max_cap) {
-        delete[] res.coeffs;
-        res.cap = max_cap;
-        res.coeffs = new int[max_cap];
-    }
+    CPoly res(max_cap, max_deg, state->p);
 
-    for (int i = 0; i < res.cap; ++i) res.coeffs[i] = 0;
     for (int i = 0; i <= max_deg; ++i) {
-        int a = (i < cap) ? coeffs[i] : 0;
-        int b = (i < other.cap) ? other.coeffs[i] : 0;
-        res.coeffs[i] = mod(a + b);
+        int a = (i <= state->degree) ? state->coeffs[i] : 0;
+        int b = (i <= other.state->degree) ? other.state->coeffs[i] : 0;
+        res.state->coeffs[i] = res.mod(static_cast<int>(a) + b);
     }
     res.trim();
     return res;
 }
 
 CPoly CPoly::operator-(const CPoly& other) const {
-    int max_cap = std::max(cap, other.cap);
-    int max_deg = std::max(degree, other.degree);
+    check_same_module(other);
+    int max_cap = std::max(state->cap, other.state->cap);
+    int max_deg = std::max(state->degree, other.state->degree);
 
-    CPoly res;
-    res.p = p;
-    if (res.cap < max_cap) {
-        delete[] res.coeffs;
-        res.cap = max_cap;
-        res.coeffs = new int[max_cap];
-    }
+    CPoly res(max_cap, max_deg, state->p);
+    res.state->degree = max_deg;
 
-    for (int i = 0; i < res.cap; ++i) res.coeffs[i] = 0;
     for (int i = 0; i <= max_deg; ++i) {
-        int a = (i < cap) ? coeffs[i] : 0;
-        int b = (i < other.cap) ? other.coeffs[i] : 0;
-        res.coeffs[i] = mod(a - b);
+        int a = (i <= state->degree) ? state->coeffs[i] : 0;
+        int b = (i <= other.state->degree) ? other.state->coeffs[i] : 0;
+        res.state->coeffs[i] = res.mod(static_cast<int>(a) - b);
     }
     res.trim();
     return res;
@@ -278,12 +255,12 @@ CPoly CPoly::operator-(const CPoly& other) const {
 std::ostream& operator<<(std::ostream& os, const CPoly& poly) {
 
     bool first = true;
-    if (poly.degree < 0) {
-        os << "0 (mod " << poly.p << ")";
+    if (poly.state->degree < 0) {
+        os << "0 (mod " << poly.state->p << ")";
         return os;
     }
-    for (int i = poly.degree; i >= 0; --i) {
-        int c = poly.mod(poly.coeffs[i]);
+    for (int i = poly.state->degree; i >= 0; --i) {
+        int c = poly.mod(poly.state->coeffs[i]);
         if (c == 0) continue;
         if (!first) os << " + ";
         if (i == 0) os << c;

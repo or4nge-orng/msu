@@ -35,7 +35,7 @@ int main() {
 
         // 7. Унарный плюс (дифференцирование rvalue)
         std::cout << "\nУнарный плюс:\n";
-        CPoly p6 = +CPoly(init, 3, 5);
+        CPoly p6 = -CPoly(init, 3, 5);
         std::cout << "+CPoly(init,3,5) = " << p6 << "\n";
 
         // 8. Инкремент/декремент
