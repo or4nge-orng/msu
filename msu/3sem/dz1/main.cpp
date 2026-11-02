@@ -33,6 +33,9 @@ int main() {
         std::cout << "p5 = move(p2) -> " << p5 << "\n";
         std::cout << "p2 after move = " << p2 << "\n";
 
+        // Копирование делит память
+
+
         // 7. Унарный плюс (дифференцирование rvalue)
         std::cout << "\nУнарный плюс:\n";
         CPoly p6 = -CPoly(init, 3, 5);
